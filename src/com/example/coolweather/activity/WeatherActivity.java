@@ -1,5 +1,6 @@
 package com.example.coolweather.activity;
 
+
 import com.example.coolweather.R;
 import com.example.coolweather.util.HttpCallbackListener;
 import com.example.coolweather.util.HttpUtil;
@@ -8,6 +9,7 @@ import com.example.coolweather.util.Utility;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
@@ -16,6 +18,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -47,6 +50,10 @@ public class WeatherActivity extends Activity implements OnClickListener {
 	*/
 	private TextView currentDateText;
 	/**
+	* 用于显示天气图片
+	*/
+	private ImageView weatherPic;
+	/**
 	* 切换城市按钮
 	*/
 	private Button switchCity;
@@ -69,6 +76,7 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		currentDateText = (TextView) findViewById(R.id.current_date);
 		switchCity = (Button) findViewById(R.id.switch_city);
 		refreshWeather = (Button) findViewById(R.id.refresh_weather);
+		weatherPic = (ImageView) findViewById(R.id.weather_pic);
 		String countyCode = getIntent().getStringExtra("county_code");
 		if (!TextUtils.isEmpty(countyCode)) {
 			// 有县级代号时就去查询天气
@@ -78,7 +86,7 @@ public class WeatherActivity extends Activity implements OnClickListener {
 			queryWeatherCode(countyCode);
 		} else {
 			// 没有县级代号时就直接显示本地天气
-			showWeather();
+			showWeatherK780();
 		}
 		switchCity.setOnClickListener(this);
 		refreshWeather.setOnClickListener(this);
@@ -121,8 +129,11 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		queryFromServer(address, "weatherCode");
 	}
 	private void queryWeatherInfoK780(String weatherCode) {
-		String address = "http://api.k780.com:88/?app=weather.today&weaid=" + weatherCode + 
-				"&appkey=10003&sign=b59bc3ef6191eb9f747dd4e83c99f2a4&format=json";
+		String address = "http://api.k780.com:88/?app=weather.today" + 
+				"&weaid=" + weatherCode + 
+				"&appkey=" + "10003" + 
+				"&sign=" + "b59bc3ef6191eb9f747dd4e83c99f2a4" +
+				"&format=" + "json";
 		queryFromServer(address, "weatherCode");
 	}
 	/**
@@ -148,7 +159,7 @@ public class WeatherActivity extends Activity implements OnClickListener {
 					runOnUiThread(new Runnable() {
 						@Override
 						public void run() {
-							showWeather();
+							showWeatherK780();
 						}
 					});
 				}
@@ -175,6 +186,21 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		weatherDespText.setText(prefs.getString("weather_desp", ""));
 		publishText.setText(prefs.getString("publish_time", "") + "发布");
 		currentDateText.setText(prefs.getString("current_date", ""));
+		weatherInfoLayout.setVisibility(View.VISIBLE);
+		cityNameText.setVisibility(View.VISIBLE);
+	}
+	private void showWeatherK780() {
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		cityNameText.setText( prefs.getString("city_name", ""));
+		temp1Text.setText(prefs.getString("temp1", ""));
+		temp2Text.setText(prefs.getString("temp2", ""));
+		weatherDespText.setText(prefs.getString("weather_desp", ""));
+		publishText.setText(prefs.getString("publish_time", "") + "发布");
+		currentDateText.setText(prefs.getString("current_date", ""));
+		Bitmap bitmap = HttpUtil.getBitmap(prefs.getString("weather_pic", ""));
+		if (null != bitmap) {
+			weatherPic.setImageBitmap(bitmap);
+		}
 		weatherInfoLayout.setVisibility(View.VISIBLE);
 		cityNameText.setVisibility(View.VISIBLE);
 	}
