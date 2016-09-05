@@ -1,14 +1,23 @@
 package com.example.coolweather.activity;
 
 
+import java.io.IOException;
+
+import pl.droidsonroids.gif.GifDrawable;
+import pl.droidsonroids.gif.GifImageView;
+
 import com.example.coolweather.R;
+import com.example.coolweather.service.AutoUpdateService;
+import com.example.coolweather.util.AlxGifHelper;
 import com.example.coolweather.util.HttpCallbackListener;
 import com.example.coolweather.util.HttpUtil;
+import com.example.coolweather.util.ProgressWheel;
 import com.example.coolweather.util.Utility;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources.NotFoundException;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -52,7 +61,7 @@ public class WeatherActivity extends Activity implements OnClickListener {
 	/**
 	* 用于显示天气图片
 	*/
-	private ImageView weatherPic;
+	private View layoutGifView ;
 	/**
 	* 切换城市按钮
 	*/
@@ -76,7 +85,7 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		currentDateText = (TextView) findViewById(R.id.current_date);
 		switchCity = (Button) findViewById(R.id.switch_city);
 		refreshWeather = (Button) findViewById(R.id.refresh_weather);
-		weatherPic = (ImageView) findViewById(R.id.weather_pic);
+		layoutGifView = (View) findViewById(R.id.weather_gif);
 		String countyCode = getIntent().getStringExtra("county_code");
 		if (!TextUtils.isEmpty(countyCode)) {
 			// 有县级代号时就去查询天气
@@ -90,6 +99,17 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		}
 		switchCity.setOnClickListener(this);
 		refreshWeather.setOnClickListener(this);
+		
+//		try {
+//			GifDrawable gifDrawable = new GifDrawable(getResources(), R.drawable.anim_flag_iceland);
+//			gifImageView.setImageDrawable(gifDrawable);
+//		} catch (NotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 	@Override
 	public void onClick(View v) {
@@ -197,11 +217,22 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		weatherDespText.setText(prefs.getString("weather_desp", ""));
 		publishText.setText(prefs.getString("publish_time", "") + "发布");
 		currentDateText.setText(prefs.getString("current_date", ""));
-		Bitmap bitmap = HttpUtil.getBitmap(prefs.getString("weather_pic", ""));
-		if (null != bitmap) {
-			weatherPic.setImageBitmap(bitmap);
+        String urlGif = prefs.getString("weather_pic", "");
+        if (!urlGif.isEmpty()) {
+			layoutGifView.setVisibility(View.VISIBLE);
+            AlxGifHelper.displayImage(urlGif,
+                    (GifImageView) layoutGifView.findViewById(R.id.gif_photo_view),
+                    (ProgressWheel) layoutGifView.findViewById(R.id.progress_wheel),
+                    (TextView) layoutGifView.findViewById(R.id.tv_progress),
+                    100);
+		}
+        else {
+			layoutGifView.setVisibility(View.GONE);
 		}
 		weatherInfoLayout.setVisibility(View.VISIBLE);
 		cityNameText.setVisibility(View.VISIBLE);
+		Log.d(TAG, "startService AutoUpdateService");
+		Intent intent = new Intent(this, AutoUpdateService.class);
+		startService(intent);
 	}
 }
